@@ -1,6 +1,8 @@
 # container-mtbls709
 Code for the study "Chemical diversity and classification of secondary metabolites in nine bryophyte species".
 
+[![DOI](https://zenodo.org/badge/203133805.svg)](https://zenodo.org/badge/latestdoi/203133805)
+
 ## Description
 In this repository we present code for the study "Chemical diversity and classification of secondary metabolites in nine bryophyte species". This repository includes all code that is necessary to reproduce the results of the study based of the representative dataset published in MetaboLights as identifier MTBLS709. Quality Control (QC) was performed with mzQuality and code can be found in the repo of that project [2].
 
