@@ -9,4 +9,5 @@ In the study we explore the influence of seasonal variations on the chemodiversi
 ## Publications and further Information
 
 [1] - Peters K, Treutler H, Döll S, Kindt ASD, Hankemeier T, Neumann S. (2019): Chemical diversity and classification of secondary metabolites in nine bryophyte species. Submitted
+
 [2] - Kindt ASD, van Vliet M, Hankemeier T (2019): mzQuality. http://www.mzQuality.nl
