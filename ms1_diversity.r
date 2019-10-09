@@ -18,6 +18,7 @@ shannon.diversity <- function(p) {
 
 
 
+# ---------- Menhinick Diversity ----------
 menhinick.diversity <- function(p) {
     # Based on: http://www.coastalwiki.org/wiki/Measurements_of_biodiversity#Species_richness_indices
     D_Mn <- length(p) / sqrt(vegan::specnumber(p))
@@ -154,21 +155,25 @@ f.species_varpart <- function() {
     model_vp <- varpart(vp_list, ~ seasons, ~ species)
     
     # Plot results
-    pdf(file="ms1_varpart.pdf", encoding="ISOLatin1", pointsize=10, width=6, height=4, family="Helvetica")
+    #pdf(file="ms1_varpart.pdf", encoding="ISOLatin1", pointsize=10, width=6, height=4, family="Helvetica")
+    pdf(file="fig_s3a.pdf", encoding="ISOLatin1", pointsize=10, width=6, height=4, family="Helvetica")
     plot(model_vp, Xnames=c("seasons","species"), cutoff=0, cex=1.2, id.size=1.2, digits=1, bg=c("darkgreen","darkblue"))
     dev.off()
+    write.csv(vp_list, file="fig_s3a.csv", row.names=TRUE)
 }
 
 
 
 # ---------- Plot unique features ----------
 f.species_div_unique <- function() {
-    pdf(paste("species_features_unique.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    #pdf(paste("species_features_unique.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    pdf(paste("fig_s1a.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
     boxplot(model_div$unique ~ species, col=species_colors, names=NA, main="Number of unique features", xlab="Species", ylab="number of unique features")
     text(1:length(species_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/14, srt=-22.5, adj=0.5, labels=species_names, xpd=TRUE, cex=0.9)
     div_tukey <- tukey.test(response=model_div$unique, term=species)
     text(1:length(species_names), par("usr")[4]+(par("usr")[4]-par("usr")[3])/40, adj=0.5, labels=div_tukey[,1], xpd=TRUE, cex=0.8)
     dev.off()
+    write.csv(cbind(data.frame(species=species), model_div[,c("unique","shannon","pielou","concentration")]), file="fig_s1.csv", row.names=FALSE)
 }
 
 
@@ -187,7 +192,8 @@ f.species_div_features <- function() {
 
 # ---------- Plot Shannon index ----------
 f.species_div_shannon <- function() {
-    pdf(paste("species_features_div_shannon.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    #pdf(paste("species_features_div_shannon.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    pdf(paste("fig_s1b.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
     boxplot(model_div$shannon ~ species, col=species_colors, names=NA, main="Shannon diversity (H\')", xlab="Species", ylab="Shannon diversity index (H\')")
     text(1:length(species_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/14, srt=-22.5, adj=0.5, labels=species_names, xpd=TRUE, cex=0.9)
     div_tukey <- tukey.test(response=model_div$shannon, term=species)
@@ -199,7 +205,8 @@ f.species_div_shannon <- function() {
 
 # ---------- Plot Pielou index ----------
 f.species_div_pielou <- function() {
-    pdf(paste("species_features_div_pilou.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    #pdf(paste("species_features_div_pilou.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    pdf(paste("fig_s1c.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
     boxplot(model_div$pielou ~ species, col=species_colors, names=NA, main="Pielou\'s evenness", xlab="Species", ylab="Pielou diversity index (J)")
     text(1:length(species_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/14, srt=-22.5, adj=0.5, labels=species_names, xpd=TRUE, cex=0.9)
     div_tukey <- tukey.test(response=model_div$pielou, term=species)
@@ -211,7 +218,8 @@ f.species_div_pielou <- function() {
 
 # ---------- Plot concentration ----------
 f.species_div_concentration <- function() {
-    pdf(paste("species_features_div_concentration.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    #pdf(paste("species_features_div_concentration.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    pdf(paste("fig_s1d.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
     boxplot(model_div$concentration ~ species, col=species_colors, names=NA, main="Concentration", xlab="Species", ylab="concentration")
     text(1:length(species_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/14, srt=-22.5, adj=0.5, labels=species_names, xpd=TRUE, cex=0.9)
     div_tukey <- tukey.test(response=model_div$concentration, term=species)
@@ -229,12 +237,14 @@ f.seasons_div_unique <- function() {
                                 winter=model_div$unique[seasons=="winter"],
                                 spring=model_div$unique[seasons=="spring"])
     # plot
-    pdf(paste("seasons_features_unique.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    #pdf(paste("seasons_features_unique.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    pdf(paste("fig_s2a.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
     boxplot(x=model_boxplot, col=seasons_colors, main="Number of unique features", xlab="Seasons", ylab="number of unique features")
     #text(1:length(seasons_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/14, srt=-22.5, adj=0.5, labels=seasons_names, xpd=TRUE, cex=0.9)
     div_tukey <- tukey.test(response=as.numeric(apply(X=model_boxplot, MARGIN=1, FUN=function(x) { x })), term=seasons)
     text(1:length(seasons_names), par("usr")[4]+(par("usr")[4]-par("usr")[3])/40, adj=0.5, labels=div_tukey[,1], xpd=TRUE, cex=0.8)
     dev.off()
+    write.csv(cbind(data.frame(seasons=seasons), model_div[,c("unique","shannon","pielou","concentration")]), file="fig_s2.csv", row.names=FALSE)
 }
 
 
@@ -265,7 +275,8 @@ f.seasons_div_shannon <- function() {
                                 winter=model_div$shannon[seasons=="winter"],
                                 spring=model_div$shannon[seasons=="spring"])
     # plot
-    pdf(paste("seasons_features_shannon.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    #pdf(paste("seasons_features_shannon.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    pdf(paste("fig_s2b.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
     boxplot(x=model_boxplot, col=seasons_colors,  main="Shannon diversity (H\')", xlab="Seasons", ylab="Shannon diversity index (H\')")
     #text(1:length(seasons_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/14, srt=-22.5, adj=0.5, labels=seasons_names, xpd=TRUE, cex=0.9)
     div_tukey <- tukey.test(response=as.numeric(apply(X=model_boxplot, MARGIN=1, FUN=function(x) { x })), term=seasons)
@@ -283,7 +294,8 @@ f.seasons_div_pielou <- function() {
                                 winter=model_div$pielou[seasons=="winter"],
                                 spring=model_div$pielou[seasons=="spring"])
     # plot
-    pdf(paste("seasons_features_pielou.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    #pdf(paste("seasons_features_pielou.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    pdf(paste("fig_s2c.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
     boxplot(x=model_boxplot, col=seasons_colors, main="Pielou\'s evenness", xlab="Seasons", ylab="Pielou diversity index (J)")
     #text(1:length(seasons_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/14, srt=-22.5, adj=0.5, labels=seasons_names, xpd=TRUE, cex=0.9)
     div_tukey <- tukey.test(response=as.numeric(apply(X=model_boxplot, MARGIN=1, FUN=function(x) { x })), term=seasons)
@@ -301,7 +313,8 @@ f.seasons_div_concentration <- function() {
                                 winter=model_div$concentration[seasons=="winter"],
                                 spring=model_div$concentration[seasons=="spring"])
     # plot
-    pdf(paste("seasons_features_concentration.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    #pdf(paste("seasons_features_concentration.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
+    pdf(paste("fig_s2d.pdf",sep=""), encoding="ISOLatin1", pointsize=10, width=5, height=5, family="Helvetica")
     boxplot(x=model_boxplot, col=seasons_colors, main="Concentration", xlab="Seasons", ylab="concentration diversity index (J)")
     #text(1:length(seasons_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/14, srt=-22.5, adj=0.5, labels=seasons_names, xpd=TRUE, cex=0.9)
     div_tukey <- tukey.test(response=as.numeric(apply(X=model_boxplot, MARGIN=1, FUN=function(x) { x })), term=seasons)

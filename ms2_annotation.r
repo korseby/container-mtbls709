@@ -244,15 +244,21 @@ f.ms2_classify_features <- function() {
     
     classes <- classes_order[which(classes_order %in% classes)]
     
+    # Classifiers
+    classifiers_class <- get(load(paste(mzml_dir, "/../classifier/", classifier_name, ".RData", sep="")))
+    
     # Area under Precision Recall Curve
     classifier_auc <- as.numeric(unlist(lapply(X=classes, FUN = function(x) { x <- classifiers_class[[x]]$AUC_PR } )))
     
     # True Positive Rate for False Positive Rate of 5 Percent
     classifier_fpr <- as.numeric(unlist(lapply(X=classes, FUN = function(x) { x <- classifiers_class[[x]]$TPR_for_FPR_of_5Percent } )))
     
-    # Save table with AUC and FPR rates
-    write.table(x=data.frame(compound_class=classes, AUC=classifier_auc, FPR=classifier_fpr),
-                file=paste(mzml_dir,"/../classifier/","correctness",".csv", sep=""),
+    # Save table with AUC-PR and TPR-FPR rates
+    #write.table(x=data.frame(compound_class=classes, AUC=classifier_auc, FPR=classifier_fpr),
+    #            file=paste(mzml_dir,"/../classifier/","correctness",".csv", sep=""),
+    #            sep=";", quote=TRUE, row.names=FALSE, dec=".")
+    write.table(x=data.frame(compound_class=classes, "AUC-PR"=classifier_auc, "TPR-FPR"=classifier_fpr),
+                file="table_1.csv",
                 sep=";", quote=TRUE, row.names=FALSE, dec=".")
     
     ######################################
@@ -274,10 +280,12 @@ f.ms2_classify_features <- function() {
     numberOfSpectra <- as.numeric(unlist(apply(X=class_list[,2:ncol(class_list)], MARGIN=2, FUN = function(x) { sum(x) })))
     numberOfSpectra <- numberOfSpectra[which(numberOfSpectra > 0)]
     classifierClasses <- classes[which(numberOfSpectra > 0)]
-    pdf(file="classes_sunburst.pdf", encoding="ISOLatin1", pointsize=8, width=10, height=10, family="Helvetica")
+    #pdf(file="classes_sunburst.pdf", encoding="ISOLatin1", pointsize=8, width=10, height=10, family="Helvetica")
+    pdf(file="fig_1.pdf", encoding="ISOLatin1", pointsize=8, width=10, height=10, family="Helvetica")
     par(mfrow=c(1,1), mar=c(0,0,0,0), oma=c(0,0,0,0), cex.axis=1, cex=1)
     sunBurstPlotFromSubstanceClasses(classifierClasses, numberOfSpectra, colorStart=0.5, colorAlpha=0.5)
     dev.off()
+    write.csv(data.frame("Classifier classes"=classifierClasses, "Number of spectra"=numberOfSpectra), file="fig_1.csv", row.names=FALSE)
     
     heatmap.2(x=as.matrix(class_list[,2:ncol(class_list)]), cexRow=0.3, cexCol=0.4,
               Rowv=as.dendrogram(hclust(dist(class_list[,2:ncol(class_list)]))), offsetRow=0,
@@ -295,7 +303,8 @@ f.ms2_classify_features <- function() {
     }
     
     # Boxplots
-    pdf(file="species_classes_boxplots.pdf", encoding="ISOLatin1", pointsize=15, width=5*4, height=4*6, family="Helvetica")
+    #pdf(file="species_classes_boxplots.pdf", encoding="ISOLatin1", pointsize=15, width=5*4, height=4*6, family="Helvetica")
+    pdf(file="fig_s4.pdf", encoding="ISOLatin1", pointsize=15, width=5*4, height=4*6, family="Helvetica")
     par(mfrow=c(6,4), mar=c(4,4,4,1), oma=c(0,0,0,0), cex.axis=1.0, cex=0.9)
     for (i in 1:length(classes)) {
         if (sum(class_list[,i+1]) > 0) {
@@ -307,8 +316,10 @@ f.ms2_classify_features <- function() {
         }
     }
     dev.off()
+    write.csv(class_list, file="fig_s4.csv", row.names=FALSE)
     
-    pdf(file="species_classes_boxplots_chosen.pdf", encoding="ISOLatin1", pointsize=12, width=5, height=4, family="Helvetica")
+    #pdf(file="species_classes_boxplots_chosen.pdf", encoding="ISOLatin1", pointsize=12, width=5, height=4, family="Helvetica")
+    pdf(file="fig_3.pdf", encoding="ISOLatin1", pointsize=12, width=5, height=4, family="Helvetica")
     for (i in 1:length(classes)) {
         if (sum(class_list[,i+1]) > 0) {
             if ( (colnames(class_list)[i+1] == "Sesquiterpenoids") | 
@@ -331,6 +342,7 @@ f.ms2_classify_features <- function() {
         }
     }
     dev.off()
+    write.csv(class_list[,c("species","Sesquiterpenoids","Flavonoids","Glycosyl compounds","Anthocyanins","Lignans, neolignans and related compounds","Stilbenes")], file="fig_3.csv", row.names=FALSE)
     
     # Heatmap of classes per species
     model_heat <- as.matrix(log(model_class))
@@ -342,7 +354,8 @@ f.ms2_classify_features <- function() {
     #gsub(x=classes, pattern=".*\\; ", replacement="")
     #which(gsub(x=classes, pattern=".*\\; ", replacement="") %in% as.character(class_colclust$labels[class_colclust$order]))
     
-    pdf(file="species_classes_heatmap.pdf", encoding="ISOLatin1", pointsize=15, width=14, height=10, family="Helvetica")
+    #pdf(file="species_classes_heatmap.pdf", encoding="ISOLatin1", pointsize=15, width=14, height=10, family="Helvetica")
+    pdf(file="fig_2.pdf", encoding="ISOLatin1", pointsize=15, width=14, height=10, family="Helvetica")
     par(oma=c(0,0,0,15))
     heatmap.2(x=as.matrix(model_heat), cexRow=1.2, cexCol=1.2,
                          Rowv=class_rowclust, offsetRow=0, colRow=species_colors,
@@ -351,7 +364,7 @@ f.ms2_classify_features <- function() {
                          #col=colorRampPalette(c('lightgrey','white','darkblue'), alpha=0.1, bias=8)(256),
                          col=colorRampPalette(c('white','lightgrey','darkgreen'), alpha=0.01, bias=1.6)(256),
                          trace="none", margins=c(21,5),
-                         key=TRUE, key.title="Color key")
+                         key=TRUE, key.title="Color key", density.info='density', denscol="black")
     mtext(text="(a)", side=2, adj=0, padj=-25, las=1, line=3, font=2, cex=1.2)
     
     par(new=TRUE, oma=c(12.5,40,6.9,0))
@@ -360,6 +373,7 @@ f.ms2_classify_features <- function() {
                     tip.color=species_colors[phylo_index], font=1, main="")
     mtext(text="(b)", side=2, adj=0, padj=-21, las=1, line=-1, font=2, cex=1.2)
     dev.off()
+    write.csv(model_heat, file="fig_2.csv", row.names=TRUE)
     
     # Linear model for each class in the species, seasons: random factor
     model_class_lmer <- data.frame(matrix(0, ncol=length(classes), nrow=length(species_names)))
@@ -410,7 +424,8 @@ f.ms2_classify_features <- function() {
     }
     
     # Boxplots
-    pdf(file="seasons_classes_boxplots.pdf", encoding="ISOLatin1", pointsize=15, width=4*4, height=4*6, family="Helvetica")
+    #pdf(file="seasons_classes_boxplots.pdf", encoding="ISOLatin1", pointsize=15, width=4*4, height=4*6, family="Helvetica")
+    pdf(file="fig_s5.pdf", encoding="ISOLatin1", pointsize=15, width=4*4, height=4*6, family="Helvetica")
     par(mfrow=c(6,4), mar=c(4,4,4,1), oma=c(0,0,0,0), cex.axis=1.0, cex=0.9)
     for (i in 1:length(classes)) {
         if (sum(class_list[,i+1]) > 0) {
@@ -426,8 +441,10 @@ f.ms2_classify_features <- function() {
         }
     }
     dev.off()
+    write.csv(class_list, file="fig_s5.csv", row.names=FALSE)
     
-    pdf(file="seasons_classes_boxplots_chosen.pdf", encoding="ISOLatin1", pointsize=12, width=4, height=4, family="Helvetica")
+    #pdf(file="seasons_classes_boxplots_chosen.pdf", encoding="ISOLatin1", pointsize=12, width=4, height=4, family="Helvetica")
+    pdf(file="fig_5.pdf", encoding="ISOLatin1", pointsize=12, width=4, height=4, family="Helvetica")
     for (i in 1:length(classes)) {
         if (sum(class_list[,i+1]) > 0) {
             if ( (colnames(class_list)[i+1] == "Fatty acids and conjugates") | 
@@ -452,6 +469,7 @@ f.ms2_classify_features <- function() {
         }
     }
     dev.off()
+    write.csv(class_list[,c("seasons","Fatty acids and conjugates","Carbohydrates and carbohydrate conjugates","Phenylpropanoids and polyketides","Flavonoids","Anthocyanins")], file="fig_5.csv", row.names=FALSE)
 
     # Heatmap of classes per seasons
     model_heat <- as.matrix(log(model_class))
@@ -463,15 +481,17 @@ f.ms2_classify_features <- function() {
     class_colclust <- as.dendrogram(hclust(dist(t(model_class), method="maximum"), method="complete"))
     class_colclust <- reorder(as.dendrogram(class_colclust), seq(1:ncol(model_class)))
     
-    pdf(file="seasons_classes_heatmap.pdf", encoding="ISOLatin1", pointsize=15, width=10, height=8, family="Helvetica")
+    #pdf(file="seasons_classes_heatmap.pdf", encoding="ISOLatin1", pointsize=15, width=10, height=8, family="Helvetica")
+    pdf(file="fig_4.pdf", encoding="ISOLatin1", pointsize=15, width=10, height=8, family="Helvetica")
     heatmap.2(x=as.matrix(model_heat), cexRow=1.2, cexCol=1.2,
               Rowv=class_rowclust, offsetRow=0,
               Colv=class_colclust, offsetCol=0,
               #cellnote=as.matrix(model_class), notecol="black", notecex=0.6,
               col=colorRampPalette(c('white','lightgrey','darkgreen'), alpha=0.01, bias=1.6)(256),
               trace="none", margins=c(21,5),
-              key=TRUE, key.title="Color key")
+              key=TRUE, key.title="Color key", density.info='density', denscol="black")
     dev.off()
+    write.csv(model_heat, file="fig_4.csv", row.names=TRUE)
     
     # Linear model for each class in the seasons, seasons: random factor
     model_class_lmer <- data.frame(matrix(0, ncol=length(classes), nrow=length(seasons_names)))
@@ -516,16 +536,17 @@ f.ms2_classify_features <- function() {
     for (i in 1:ncol(class_list)) { class_list[,i] <- as.numeric(class_list[,i]) }
     
     # Boxplots to show seasonal effect in each species
-    pdf(file="seasons_classes_boxplots_species.pdf", encoding="ISOLatin1", pointsize=15, width=4*4, height=4*6, family="Helvetica")
+    #pdf(file="seasons_classes_boxplots_species.pdf", encoding="ISOLatin1", pointsize=15, width=4*4, height=4*6, family="Helvetica")
+    pdf(file="fig_s6.pdf", encoding="ISOLatin1", pointsize=15, width=4*4, height=4*6, family="Helvetica")
     par(mfrow=c(6,4), mar=c(4,4,4,1), oma=c(0,0,0,0), cex.axis=1.0, cex=0.9)
     for (sp in species_names) {
         for (i in 1:length(classes)) {
-            if (sum(class_list[,i+1]) > 0) {
-                model_boxplot <- data.frame(summer=class_list[,i+1][seasons=="summer" & species==sp],
-                                            autumn=class_list[,i+1][seasons=="autumn" & species==sp],
-                                            winter=class_list[,i+1][seasons=="winter" & species==sp],
-                                            spring=class_list[,i+1][seasons=="spring" & species==sp])
-                boxplot(x=model_boxplot, col=seasons_colors, names=NA, main=colnames(class_list)[i+1], cex.main=0.9, xlab="Seasons", ylab="Chemical richness")
+            if (sum(class_list[,i]) > 0) {
+                model_boxplot <- data.frame(summer=class_list[,i][seasons=="summer" & species==sp],
+                                            autumn=class_list[,i][seasons=="autumn" & species==sp],
+                                            winter=class_list[,i][seasons=="winter" & species==sp],
+                                            spring=class_list[,i][seasons=="spring" & species==sp])
+                boxplot(x=model_boxplot, col=seasons_colors, names=NA, main=colnames(class_list)[i], cex.main=0.9, xlab="Seasons", ylab="Chemical richness")
                 text(1:length(seasons_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/10, srt=-22.5, adj=0.5, labels=seasons_names, xpd=TRUE, cex=0.9)
                 div_tukey <- tukey.test(response=as.numeric(apply(X=model_boxplot, MARGIN=1, FUN=function(x) { x })), term=as.factor(rep(colnames(model_boxplot),nrow(model_boxplot))))
                 text(1:length(seasons_names), par("usr")[4]+(par("usr")[4]-par("usr")[3])/20, adj=0.5, labels=div_tukey[match(seasons_names, rownames(div_tukey)),1], xpd=TRUE, cex=0.8)
@@ -536,12 +557,12 @@ f.ms2_classify_features <- function() {
     
     sp <- c("Brarut", "Calcus", "Hypcup", "Rhysqu")
     for (i in 1:length(classes)) {
-        if (sum(class_list[,i+1]) > 0) {
-            model_boxplot <- data.frame(summer=class_list[,i+1][seasons=="summer" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
-                                        autumn=class_list[,i+1][seasons=="autumn" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
-                                        winter=class_list[,i+1][seasons=="winter" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
-                                        spring=class_list[,i+1][seasons=="spring" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])])
-            boxplot(x=model_boxplot, col=seasons_colors, names=NA, main=colnames(class_list)[i+1], cex.main=0.9, xlab="Seasons", ylab="Chemical richness")
+        if (sum(class_list[,i]) > 0) {
+            model_boxplot <- data.frame(summer=class_list[,i][seasons=="summer" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
+                                        autumn=class_list[,i][seasons=="autumn" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
+                                        winter=class_list[,i][seasons=="winter" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
+                                        spring=class_list[,i][seasons=="spring" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])])
+            boxplot(x=model_boxplot, col=seasons_colors, names=NA, main=colnames(class_list)[i], cex.main=0.9, xlab="Seasons", ylab="Chemical richness")
             text(1:length(seasons_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/10, srt=-22.5, adj=0.5, labels=seasons_names, xpd=TRUE, cex=0.9)
             div_tukey <- tukey.test(response=as.numeric(apply(X=model_boxplot, MARGIN=1, FUN=function(x) { x })), term=as.factor(rep(colnames(model_boxplot),nrow(model_boxplot))))
             text(1:length(seasons_names), par("usr")[4]+(par("usr")[4]-par("usr")[3])/20, adj=0.5, labels=div_tukey[match(seasons_names, rownames(div_tukey)),1], xpd=TRUE, cex=0.8)
@@ -551,12 +572,12 @@ f.ms2_classify_features <- function() {
     
     sp <- c("Fistax", "Gripul", "Plaund", "Polstr")
     for (i in 1:length(classes)) {
-        if (sum(class_list[,i+1]) > 0) {
-            model_boxplot <- data.frame(summer=class_list[,i+1][seasons=="summer" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
-                                        autumn=class_list[,i+1][seasons=="autumn" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
-                                        winter=class_list[,i+1][seasons=="winter" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
-                                        spring=class_list[,i+1][seasons=="spring" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])])
-            boxplot(x=model_boxplot, col=seasons_colors, names=NA, main=colnames(class_list)[i+1], cex.main=0.9, xlab="Seasons", ylab="Chemical richness")
+        if (sum(class_list[,i]) > 0) {
+            model_boxplot <- data.frame(summer=class_list[,i][seasons=="summer" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
+                                        autumn=class_list[,i][seasons=="autumn" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
+                                        winter=class_list[,i][seasons=="winter" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])],
+                                        spring=class_list[,i][seasons=="spring" & (species==sp[1] | species==sp[2] | species==sp[3] | species==sp[4])])
+            boxplot(x=model_boxplot, col=seasons_colors, names=NA, main=colnames(class_list)[i], cex.main=0.9, xlab="Seasons", ylab="Chemical richness")
             text(1:length(seasons_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/10, srt=-22.5, adj=0.5, labels=seasons_names, xpd=TRUE, cex=0.9)
             div_tukey <- tukey.test(response=as.numeric(apply(X=model_boxplot, MARGIN=1, FUN=function(x) { x })), term=as.factor(rep(colnames(model_boxplot),nrow(model_boxplot))))
             text(1:length(seasons_names), par("usr")[4]+(par("usr")[4]-par("usr")[3])/20, adj=0.5, labels=div_tukey[match(seasons_names, rownames(div_tukey)),1], xpd=TRUE, cex=0.8)
@@ -564,9 +585,12 @@ f.ms2_classify_features <- function() {
     }
     mtext("(k) Acrocarpous species", outer=TRUE, adj=0.01, padj=1.6, font=2, cex=1.2)
     dev.off()
+    write.csv(cbind(species=species,season=seasons,class_list), file="fig_s6.csv", row.names=FALSE)
     
     # Boxplots to show seasonal effect in each species
-    pdf(file=paste0("seasons_classes_boxplots_species_chosen.pdf"), encoding="ISOLatin1", pointsize=12, width=4, height=4, family="Helvetica")
+    #pdf(file=paste0("seasons_classes_boxplots_species_chosen.pdf"), encoding="ISOLatin1", pointsize=12, width=4, height=4, family="Helvetica")
+    pdf(file="fig_6.pdf", encoding="ISOLatin1", pointsize=12, width=4, height=4, family="Helvetica")
+    model_csv <- data.frame(species=NULL, summer=NULL, autumn=NULL, winter=NULL, spring=NULL, compound_class=NULL)
     for (i in 1:10) {
         if (i == 1) { sp <- "Brarut"; cl <- "Lactones" }
         if (i == 2) { sp <- "Fistax"; cl <- "Anthocyanins" }
@@ -582,6 +606,7 @@ f.ms2_classify_features <- function() {
                                     autumn=class_list[,cl][seasons=="autumn" & species==sp],
                                     winter=class_list[,cl][seasons=="winter" & species==sp],
                                     spring=class_list[,cl][seasons=="spring" & species==sp])
+        model_csv <- rbind(model_csv, cbind(data.frame(species=c(sp,sp,sp)), model_boxplot, data.frame(compound_class=c(cl,cl,cl))))
         boxplot(x=model_boxplot, col=seasons_colors, names=NA, main=cl, cex.main=0.9, xlab="seasons", ylab="")
         mtext(paste0(species_full_names[which(species_names == sp)]), outer=FALSE, side=2, line=3, font=3, cex=1)
         text(1:length(seasons_names), par("usr")[3]-(par("usr")[4]-par("usr")[3])/10, srt=-22.5, adj=0.5, labels=seasons_names, xpd=TRUE, cex=0.9)
@@ -590,6 +615,7 @@ f.ms2_classify_features <- function() {
         mtext(paste0("(",letters[i],")"), outer=TRUE, adj=0.01, line=-2, font=2, cex=1.4)
     }
     dev.off()
+    write.csv(model_csv, file="fig_6.csv", row.names=FALSE)
 }
 
 
@@ -617,9 +643,11 @@ f.ms2_classify_varpart <- function() {
     model_vp <- varpart(vp_list, ~ seasons, ~ species)
     
     # Plot results
-    pdf(file="ms2_varpart.pdf", encoding="ISOLatin1", pointsize=10, width=6, height=4, family="Helvetica")
+    #pdf(file="ms2_varpart.pdf", encoding="ISOLatin1", pointsize=10, width=6, height=4, family="Helvetica")
+    pdf(file="fig_s3b.pdf", encoding="ISOLatin1", pointsize=10, width=6, height=4, family="Helvetica")
     plot(model_vp, Xnames=c("seasons","species"), cutoff=0, cex=1.2, id.size=1.2, digits=1, bg=c("darkgreen","darkblue"))
     dev.off()
+    write.csv(vp_list, file="fig_s3b.csv", row.names=TRUE)
     
     
     
@@ -637,7 +665,8 @@ f.ms2_classify_varpart <- function() {
     model_fit <- data.frame(r2=c(model_dbrda_ef$vectors$r,model_dbrda_ef$factors$r),
                             pvals=c(model_dbrda_ef$vectors$pvals,model_dbrda_ef$factors$pvals) )
     rownames(model_fit) <- c(names(model_dbrda_ef$vectors$r),names(model_dbrda_ef$factors$r))
-    write.csv(model_fit, file="seasons_classes_varpart.csv", row.names=TRUE)
+    #write.csv(model_fit, file="seasons_classes_varpart.csv", row.names=TRUE)
+    write.csv(model_fit, file="table_s1.csv", row.names=TRUE)
 }
 
 
@@ -674,7 +703,8 @@ f.ms2_classify_eco <- function() {
     model_fit <- data.frame(r2=c(model_dbrda_ef$vectors$r,model_dbrda_ef$factors$r),
                             pvals=c(model_dbrda_ef$vectors$pvals,model_dbrda_ef$factors$pvals) )
     rownames(model_fit) <- c(names(model_dbrda_ef$vectors$r),names(model_dbrda_ef$factors$r))
-    write.csv(model_fit, file="classes_traits_stat.csv", row.names=TRUE)
+    #write.csv(model_fit, file="classes_traits_stat.csv", row.names=TRUE)
+    write.csv(model_fit, file="table_s2.csv", row.names=TRUE)
     
     # Find best model using stepwise model selection
     model_step <- ordistep(object=model_0, scope=formula(model_1), R2scope=TRUE, Pin=0.2, Pout=5, direction="both", perm.max=1000, trace=TRUE)
